@@ -1,0 +1,13 @@
+# 기존 패키지
+googlemaps>=4.10.0
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+
+# LangGraph 및 LangChain
+langgraph>=0.0.20
+langchain>=0.1.0
+langchain-core>=0.1.0
+
+# 선택사항 (LLM 기반 라우팅 시 필요)
+# langchain-openai>=0.0.5
+# openai>=1.0.0
