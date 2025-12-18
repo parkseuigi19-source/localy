@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Mission Test Page</title>
+
+  <style>
+    body {
+      font-family: 'Pretendard', Arial, sans-serif;
+      background: #f8f9fc;
+      padding: 30px;
+      max-width: 900px;
+      margin: 0 auto;
+      color: #444;
+    }
+
+    h1 {
+      text-align: center;
+      color: #5a78ff;
+      margin-bottom: 40px;
+      font-size: 32px;
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      margin-bottom: 35px;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(150, 170, 255, 0.2);
+      transition: 0.3s;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(150, 170, 255, 0.25);
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      margin-top: 10px;
+    }
+    button {
+      background: #7a8cff;
+      color: white;
+      border: none;
+      margin-top: 15px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #6575e8;
+    }
+
+    .result-box {
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+      font-size: 15px;
+      line-height: 1.6;
+      white-space: pre-line;
+      transition: 0.3s;
+    }
+
+    .success-box {
+      background: #d8f8e6;
+      border: 2px solid #8be1b1;
+      color: #18794e;
+      animation: fadeUp 0.4s;
+    }
+    .fail-box {
+      background: #ffe3e3;
+      border: 2px solid #ff9b9b;
+      color: #a82020;
+      animation: fadeUp 0.4s;
+    }
+    .loading-box {
+      background: #fff4d6;
+      border: 2px solid #ffcf7a;
+      color: #9e6a00;
+      animation: fadeUp 0.4s;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 태그 스타일 */
+    .tag {
+      display: inline-block;
+      background: #e0e7ff;
+      padding: 6px 12px;
+      margin: 3px;
+      border-radius: 20px;
+      color: #4a56a6;
+      font-size: 13px;
+      animation: pop 0.3s ease;
+    }
+    @keyframes pop {
+      from { transform: scale(0.6); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    /* 이미지 미리보기 */
+    .preview-box {
+      margin-top: 15px;
+      display: flex;
+      gap: 12px;
+    }
+    .preview-box img {
+      width: 45%;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+  </style>
+</head>
+
+<body>
+
+<h1>🎯 여행 미션 테스트 페이지</h1>
+
+<!-- --------------------------
+  1) 미션 업로드
+--------------------------- -->
+<div class="card">
+  <h2>📤 1단계: 미션 업로드</h2>
+
+  <input type="file" id="uploadFile" accept="image/*">
+  <div class="preview-box" id="originPreviewBox"></div>
+
+  <input type="text" id="missionKind" value="landmark" placeholder="mission_kind (landmark / food / location)">
+  <input type="text" id="uploadLat" value="37.55" placeholder="latitude">
+  <input type="text" id="uploadLng" value="126.98" placeholder="longitude">
+  
+  <button onclick="uploadMission()">📤 업로드</button>
+
+  <div id="uploadResult" class="result-box loading-box" style="display:none"></div>
+</div>
+
+
+<!-- --------------------------
+  2) 상태 확인
+--------------------------- -->
+<div class="card">
+  <h2>📡 2단계: 미션 상태 확인</h2>
+
+  <input type="text" id="statusMissionId" placeholder="mission_id (자동 입력됨)" readonly>
+  <button onclick="checkStatus()">📡 상태 확인</button>
+
+  <div id="statusResult" class="result-box loading-box" style="display:none"></div>
+</div>
+
+
+<!-- --------------------------
+  3) 미션 체크
+--------------------------- -->
+<div class="card">
+  <h2>🎯 3단계: 미션 수행 체크</h2>
+
+  <input type="text" id="checkMissionId" placeholder="mission_id (자동 입력됨)" readonly>
+
+  <input type="file" id="checkFile" accept="image/*">
+  <div class="preview-box" id="checkPreviewBox"></div>
+
+  <input type="text" id="checkLat" value="37.55" placeholder="latitude">
+  <input type="text" id="checkLng" value="126.98" placeholder="longitude">
+
+  <button onclick="checkMission()">🎯 체크하기</button>
+
+  <div id="checkResult" class="result-box success-box" style="display:none"></div>
+</div>
+
+<script>
+const BASE = "http://127.0.0.1:8002";
+
+/* --------------------------
+  이미지 미리보기
+--------------------------- */
+function previewImage(input, previewBoxId) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById(previewBoxId).innerHTML =
+      `<img src="${e.target.result}">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById("uploadFile").addEventListener("change", function () {
+  previewImage(this, "originPreviewBox");
+});
+document.getElementById("checkFile").addEventListener("change", function () {
+  previewImage(this, "checkPreviewBox");
+});
+
+
+/* --------------------------
+  1) 미션 업로드
+--------------------------- */
+async function uploadMission() {
+  const file = uploadFile.files[0];
+  if (!file) return alert("원본 이미지를 업로드하세요!");
+
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("mission_kind", missionKind.value);
+  fd.append("latitude", uploadLat.value);
+  fd.append("longitude", uploadLng.value);
+
+  uploadResult.style.display = "block";
+  uploadResult.className = "result-box loading-box";
+  uploadResult.textContent = "⏳ 업로드 중...";
+
+  const res = await fetch(`${BASE}/upload`, {
+    method: "POST",
+    body: fd
+  });
+  const data = await res.json();
+
+  statusMissionId.value = data.mission_id;
+  checkMissionId.value = data.mission_id;
+
+  uploadResult.className = "result-box success-box";
+  uploadResult.textContent = "📤 업로드 성공!\n\n" + JSON.stringify(data, null, 2);
+}
+
+
+/* --------------------------
+  2) 상태 확인
+--------------------------- */
+async function checkStatus() {
+  const id = statusMissionId.value;
+  statusResult.style.display = "block";
+  statusResult.className = "result-box loading-box";
+  statusResult.textContent = "⏳ 상태 확인 중...";
+
+  const res = await fetch(`${BASE}/status/${id}`);
+  const data = await res.json();
+
+  statusResult.className =
+    data.status === "done" ? "result-box success-box" : "result-box loading-box";
+
+  statusResult.textContent = `상태: ${data.status}\n\n${JSON.stringify(data, null, 2)}`;
+}
+
+
+/* --------------------------
+  3) 미션 체크
+--------------------------- */
+async function checkMission() {
+  const id = checkMissionId.value;
+  const file = checkFile.files[0];
+
+  const fd = new FormData();
+  fd.append("mission_id", id);
+  fd.append("file", file);
+  fd.append("latitude", checkLat.value);
+  fd.append("longitude", checkLng.value);
+
+  checkResult.style.display = "block";
+  checkResult.className = "result-box loading-box";
+  checkResult.textContent = "⏳ 체크 중...";
+
+  const res = await fetch(`${BASE}/mission/check`, {
+    method: "POST",
+    body: fd
+  });
+  const data = await res.json();
+
+  // 성공/실패 배경 바꾸기
+  checkResult.className = data.success
+    ? "result-box success-box"
+    : "result-box fail-box";
+
+  // 태그 UI 생성
+  let tags = "";
+  if (data.detected_objects) {
+    data.detected_objects.forEach(obj => {
+      tags += `<span class="tag"># ${obj}</span>`;
+    });
+  }
+
+  checkResult.innerHTML = `
+${data.success ? "🎉 미션 성공!" : "❌ 미션 실패..."} 
+
+📍 GPS OK : ${data.gps_ok}
+거리 : ${data.distance_m}m
+
+🖼️ 유사도 : ${data.similarity}%  
+
+🔍 감지된 객체  
+${tags || "없음"}
+
+-----------------------------------
+전체 응답
+${JSON.stringify(data, null, 2)}
+`;
+}
+
+</script>
+
+</body>
+</html>
