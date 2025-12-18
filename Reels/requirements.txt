@@ -1,0 +1,30 @@
+# FastAPI 및 웹 서버
+fastapi
+uvicorn[standard]
+python-multipart
+aiofiles
+pydantic
+python-dotenv
+
+# 비디오 및 이미지 처리
+moviepy
+Pillow
+piexif
+opencv-python  # 얼굴 감지 및 이미지 처리
+
+# 유틸리티
+python-magic-bin  # Windows용 파일 타입 검증
+
+# AI 서비스
+openai  # OpenAI API (GPT-4 Vision, TTS)
+
+# Stable Video Diffusion (무료 로컬 AI 영상 생성)
+# GPU 필요 (NVIDIA, 8GB+ VRAM)
+diffusers  # Stable Video Diffusion
+transformers
+accelerate
+torch
+torchvision
+
+# 오디오 처리
+pydub  # 오디오 편집 및 믹싱
